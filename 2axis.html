@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Temperature Plot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" href="configs/style.css">
+</head>
+<body>
+    <h1>Temperature Graph</h1>
+    <h4>Date: <span id="date"></span></h4>
+    <div class="chart-container">
+        <canvas id="temperatura"></canvas>
+    </div>
+
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://localhost:4000'); //connect to server
+        var temper = document.getElementById('temperatura').getContext('2d');
+        var t1 = new Chart(temper, {
+            // The type of chart we want to create
+            type: 'line',
+            // The data for our dataset
+            data: {
+            labels: [],
+            datasets: [{
+                label: "Temperatura",
+                borderColor: "#af2828",
+                data: [],
+                yAxisID: 'y-axis-1',
+                fill: false,
+                pointStyle: 'circle',
+                backgroundColor: '#af2828',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                lineTension: 0,
+            },{
+                label: "Umidade",
+                borderColor: "#4573a1",
+                data: [],
+                yAxisID: 'y-axis-2',
+                fill: false,
+                pointStyle: 'circle',
+                backgroundColor: '#3498DB',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                lineTension: 0,
+            }]
+            },
+            // Configuration options go here
+            options: {
+					responsive: true,
+					hoverMode: 'index',
+					stacked: false,
+					title: {
+						display: true,
+						text: 'Chart.js Line Chart - Multi Axis'
+					},
+					scales: {
+						yAxes: [{
+							type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+							display: true,
+							position: 'left',
+							id: 'y-axis-1',
+						}, {
+							type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+							display: false,
+							position: 'left',
+							id: 'y-axis-2',
+							// grid line settings
+							gridLines: {
+								drawOnChartArea: false, // only want the grid lines for one axis to show up
+							},
+						}],
+                    }
+                }
+            
+        });
+
+        
+        socket.on('temp', function(data) { //As a temp data is received 
+            var dados = data.temp.split(",");
+            document.getElementById('date').innerHTML = data.date; //update the date
+            if(t1.data.labels.length != 15) { //If we have less than 15 data points in the graph
+                t1.data.labels.push(data.time);  //Add time in x-asix
+                t1.data.datasets[1].data.push(dados[0]);
+                t1.data.datasets[0].data.push(dados[1]); //Add temp in y-axis
+            }
+            else { //If there are already 15 data points in the graph.
+                t1.data.labels.shift(); //Remove first time data
+                t1.data.labels.push(data.time); //Insert latest time data
+                t1.data.datasets[0].data.shift(); //Remove first temp data
+                t1.data.datasets[1].data.shift(); //Remove first temp data
+
+                t1.data.datasets[0].data.push(dados[0]); //Insert latest temp data
+                t1.data.datasets[1].data.push(dados[1]);
+            }
+            t1.update(); //Update the graph.
+        });
+    </script>
+</body>
+</html>
