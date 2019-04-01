@@ -20,7 +20,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
     <script>
+
         var socket = io.connect('http://localhost:4000'); //Se conecta ao servidor
+        
         var temper = document.getElementById('temperatura').getContext('2d');
         var t1 = new Chart(temper, {
             // O tipo de gráfico que será criado
@@ -56,6 +58,7 @@
             }
             
         });
+
         var umid = document.getElementById('umidade').getContext('2d');
         var u1 = new Chart(umid, {
             // O tipo de gráfico que será criado
@@ -82,7 +85,7 @@
 					stacked: false,
 					title: {
 						display: true,
-                        text: 'Gráfico de Temperatura',
+                        text: 'Gráfico de Umidade',
                         fontSize: 30,
                         fontColor: "#3498DB",
                         fontFamily: " 'ZCOOL XiaoWei', serif",
@@ -91,12 +94,13 @@
             }
             
         });
+
         socket.on('temp', function(data) { //Assim q o temp é recebido
 
             var dados = data.temp.split(","); //Tranforma as temperaturas recebidas em um vetor de duas posições e usa a virgula como separador
             // o resultado dessa operação será dados = [ 0 : "temperatura", 1 : "umidade"] 
 
-            document.getElementById('date').innerHTML = data.date; //Define a data
+            date.innerHTML = data.date; //Define a data
 
             if(t1.data.labels.length != 15) { //Se houver menos de 15 dados
                 t1.data.labels.push(data.time);  //Coloca o horário no eixo X
@@ -114,21 +118,21 @@
             }
             t1.update(); //Atualiza o gráfico 
 
-            if(u1.data.labels.length != 15) { //If we have less than 15 data points in the graph
-                u1.data.labels.push(data.time);  //Add time in x-asix
+            if(u1.data.labels.length != 15) { //Se houver menos de 15 dados
+                u1.data.labels.push(data.time);  //Coloca o horário no eixo X
                 u1.data.datasets.forEach((dataset) => {
-                    dataset.data.push(dados[1]); //Add temp in y-axis
+                    dataset.data.push(dados[1]); //Adiciona a temperatura no eixo Y
                 });
             }
-            else { //If there are already 15 data points in the graph.
-                u1.data.labels.shift(); //Remove first time data
-                u1.data.labels.push(data.time); //Insert latest time data
+            else {
+                u1.data.labels.shift(); //Remove o primeiro horário
+                u1.data.labels.push(data.time); //Insere a data atual
                 u1.data.datasets.forEach((dataset) => {
-                    dataset.data.shift(); //Remove first temp data
-                    dataset.data.push(dados[1]); //Insert latest temp data
+                    dataset.data.shift(); //Remove o primeiro registro de tempertura
+                    dataset.data.push(dados[1]); //Insere um novo registro de temperatura
                 });
             }
-            u1.update(); //Update the graph.
+            u1.update(); //Atualiza o gráfico 
         });
     </script>
 </body>
