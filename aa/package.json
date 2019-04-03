@@ -1,16 +1,12 @@
 {
-  "name": "real-time",
+  "name": "asdasd",
   "version": "1.0.0",
-  "description": "App para pegar dados de temperatura do Arduino em tempo real",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/ZoeiroVader/zArduino-realTime.git"
-  },
-  "author": "Guilherme Santos",
+  "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.4",

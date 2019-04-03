@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>TOste</title>
+</head>
+<body>
+    <div class="chart">
+        <canvas id="scores"></canvas>
+    </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+<script>
+    var score = scores.getContext('2d');
+    var s = new Chart(score, {
+        type: 'line',
+        data: {
+            labels: ['Primeira Semana', 'Segunda Semana', 'Terceira Semana', 'Quarta Semana', 'Quinta Semana'],
+            datasets: [{
+                data: [0, 2, 4, 8, 16],
+                backgroundColor: '#af2828',
+                borderColor: '#af2828',
+                label: 'XP',
+                pointHoverRadius: 5,
+                borderCapStyle: 'round',
+                borderDash: [50, 1, 50],
+                fill: false,
+                borderWidth: 5
+            },{
+                data: [16, 8, 4, 2, 0],
+                backgroundColor: '#282828',
+                label: 'Levels Upados',
+                pointHoverRadius: 5,
+                cubicInterpolationMode: 'default',
+                borderColor: '#282828',
+                fill: false,
+                borderWidth: 5
+            },{
+                data: [0, 4, 8, 4, 0],
+                backgroundColor: '#ffa228',
+                label: 'sol',
+                pointHoverRadius: 5,
+                // steppedLine: true
+            }]
+        }
+    })
+</script>
+</html>
