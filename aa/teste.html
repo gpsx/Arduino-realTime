@@ -20,30 +20,43 @@
             labels: ['Primeira Semana', 'Segunda Semana', 'Terceira Semana', 'Quarta Semana', 'Quinta Semana'],
             datasets: [{
                 data: [0, 2, 4, 8, 16],
-                backgroundColor: '#af2828',
-                borderColor: '#af2828',
+                backgroundColor: '#09a228',
+                borderColor: '#09a228',
                 label: 'XP',
                 pointHoverRadius: 5,
                 borderCapStyle: 'round',
-                borderDash: [50, 1, 50],
-                fill: false,
+                // borderDash: [50, 1, 50],
+                // fill: false,
                 borderWidth: 5
             },{
                 data: [16, 8, 4, 2, 0],
-                backgroundColor: '#282828',
+                backgroundColor: '#097928',
                 label: 'Levels Upados',
                 pointHoverRadius: 5,
                 cubicInterpolationMode: 'default',
-                borderColor: '#282828',
-                fill: false,
+                borderColor: '#097928',
+                // fill: false,
                 borderWidth: 5
             },{
                 data: [0, 4, 8, 4, 0],
                 backgroundColor: '#ffa228',
-                label: 'sol',
+                label: 'Xp Compartilhado',
                 pointHoverRadius: 5,
                 // steppedLine: true
+            },{
+                data: [16, 16, 16, 16, 16],
+                backgroundColor: '#77aaff',
+                label: 'Membros da Guilda',
+
             }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: "XP Grind",
+                fontSize: 30,
+
+            }
         }
     })
 </script>
