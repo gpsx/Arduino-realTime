@@ -1,4 +1,4 @@
-var socket = io.connect('http://localhost:4000'); //Se conecta ao servidor
+var socket = io.connect('http://10.0.8.208:4000'); //Se conecta ao servidor
 
 var temper = document.getElementById('temperatura').getContext('2d');
 var t1 = new Chart(temper, {

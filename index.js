@@ -15,16 +15,16 @@ app.use(express.static('public')); //Send index.html page on GET /
 
 
 
-app.get('/', (req, res) => { //Simplesmente devolve a index.html quando for digitado no navegador localhost:4000
-    res.sendFile('index.html', {
-        root: path.join(__dirname, '..')
-    })
-})
+// app.get('/', (req, res) => { //Simplesmente devolve a index.html quando for digitado no navegador localhost:4000
+//     res.sendFile('index.html', {
+//         root: path.join(__dirname, '..')
+//     })
+// })
 
 const SerialPort = require('serialport'); //Recupera o modulo Serial Port
 
 const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
-const port = new SerialPort('COM9'); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
+const port = new SerialPort('COM5'); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
 
 const parser = port.pipe(new Readline({delimiter: '\n'})); //Lê a linha apenas se uma nova linhas for inserida
 
