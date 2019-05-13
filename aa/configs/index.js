@@ -23,12 +23,37 @@ app.get('/', (req, res) => { //Simplesmente devolve a index.html quando for digi
 
 const SerialPort = require('serialport'); //Recupera o modulo Serial Port
 
-const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
-const port = new SerialPort('COM9'); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
+SerialPort.list().then(entradas_seriais => {
 
-const parser = port.pipe(new Readline({delimiter: '\n'})); //Lê a linha apenas se uma nova linhas for inserida
+    // este bloco trata a verificação de Arduino conectado (inicio)
 
-parser.on('data', (temp) => { //Na recepção dos dados = "On data retrieving"
+    var entradas_seriais_arduino = entradas_seriais.filter(entrada_serial => {
+        return entrada_serial.vendorId == 2341 && entrada_serial.productId == 43;
+    });
+
+    if (entradas_seriais_arduino.length != 1) {
+        throw new Error("Nenhum Arduino está conectado ou porta USB sem comunicação ou mais de um Arduino conectado");
+    }
+
+    console.log("Arduino conectado na COM %s", entradas_seriais_arduino[0].comName);
+
+    return entradas_seriais_arduino[0].comName;
+
+
+    // este bloco trata a verificação de Arduino conectado (fim)
+
+}).then(ArduinoCon => {
+    receiveSend(ArduinoCon);
+})
+
+
+function receiveSend(porta) {
+    const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
+    const port = new SerialPort(`${porta}`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
+
+    const parser = port.pipe(new Readline({delimiter: '\n'})); //Lê a linha apenas se uma nova linhas for inserida
+
+    parser.on('data', (temp) => { //Na recepção dos dados = "On data retrieving"
 
     console.log(temp);//Printa o dado recebido no console
 
@@ -40,7 +65,11 @@ parser.on('data', (temp) => { //Na recepção dos dados = "On data retrieving"
 
     io.sockets.emit('temp', {date: data, time: hora, temp:temp}); //Emite o objeto temp, com os atributos date, time e temp
 });
+}
 
 io.on('connection', (socket) => {//É mostrado quando alguem se conecta
     console.log("Alguem acessou a página do gráfico >-<"); 
 })
+
+
+    

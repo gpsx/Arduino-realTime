@@ -4,9 +4,9 @@ socket.on('temp', function(data) { //Assim q o temp é recebido
     // o resultado dessa operação será dados = [ 0 : "temperatura", 1 : "umidade"] 
 
     date.innerHTML = data.date; //Define a data
-    if (dados[1] >= 27) {
-        alert("ALERTA! TEMPERATURA EM ESTADO CRÍTICO!")
-    }
+    // if (dados[1] >= 27) {
+    //     alert("ALERTA! TEMPERATURA EM ESTADO CRÍTICO!")
+    // }
     //Função para atualizar o gráfico
     updateChart(t1, 1, minTemp, maxTemp);
     updateChart(u1, 0, minUmi, maxUmi);
