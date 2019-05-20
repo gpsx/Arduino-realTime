@@ -4,22 +4,35 @@ var app = express();
 
 var path = require('path'); //Recupera o modulo path, que vem junto do express
 
+var sql = require('mssql');
+
 var server = app.listen(4000, () => { //Inicia o servidor na porta 4000
-    console.log("Recebendo solicitações na porta 4000...");
+    console.log("\n Recebendo solicitações na porta 4000...");
 })
 
 var io = require('socket.io')(server); //Recupera o modulo so socket.io e atrela o socket.io ao nosso servidor express.
 
-
+var sensores;
 app.use(express.static('public')); //Send index.html page on GET /
 
+const readline = require('readline');
 
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-// app.get('/', (req, res) => { //Simplesmente devolve a index.html quando for digitado no navegador localhost:4000
-//     res.sendFile('index.html', {
-//         root: path.join(__dirname, '..')
-//     })
-// })
+const config = {
+	user: 'messias01191024',
+	password: '#Gf49795868802',
+	server: 'servidor01191024.database.windows.net', // You can use 'localhost\\instance' to connect to named instance
+	database: 'BancoProjeto',
+ 
+	options: {
+		encrypt: true // Use this if you're on Windows Azure
+	}
+}
+
 
 const SerialPort = require('serialport'); //Recupera o modulo Serial Port
 
@@ -61,8 +74,49 @@ function receiveSend(porta) {
     var hora = (datahora.getHours())+":"+(datahora.getMinutes()); //Transforma em uma hora legível 15:00
 
     io.sockets.emit('temp', {date: data, time: hora, temp:temp}); //Emite o objeto temp, com os atributos date, time e temp
+
+    // sql.connect(config, err => {
+    //     // ... error checks
+     
+    //     const request = new sql.Request()
+    //     request.stream = true // You can set streaming differently for each request
+    //     request.query(`INSERT INTO Usuarios VALUES ('${register.name}', '${register.email}','${register.password}', ${register.fkIDclientes})`) // or request.execute(procedure)
+     
+    //     request.on('error', err => {
+    //         res.send(err)
+    //     })
+    //     request.on('done', result => {
+    //         console.log(result);
+    //         res.redirect('/');
+    //         sql.close();
+    //     })
+        
+    // })
 });
 }
+
+
+
+rl.question('Qual o código do seu sensor?', (answer) => {
+    // TODO: Log the answer in a database
+    sql.connect(config).then(() => {
+        return sql.query`Select * from Sensor where IdSensor = ${answer}`
+    }).then(result => {        
+        console.log(result.rowsAffected);
+        if (result.rowsAffected > 0) {
+            console.log("Achou");
+        }else{
+            console.log(`Sensor não encontrado` );
+        }
+        
+        sql.close()
+    }).catch(err => {
+        console.log(err);
+        sql.close()
+        console.log('Falha ao estabelecer conexão com o banco', err);	
+    });
+    rl.close();
+});
 
 io.on('connection', (socket) => {//É mostrado quando alguem se conecta
     console.log("Alguem acessou a página do gráfico >-<"); 

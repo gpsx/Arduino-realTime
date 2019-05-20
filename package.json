@@ -8,12 +8,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/ZoeiroVader/zArduino-realTime.git"
+    "url": "http://github.com/ZoeiroVader/Arduino-realTime.git"
   },
   "author": "Guilherme Santos",
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.4",
+    "mssql": "^5.1.0",
     "serialport": "^7.1.4",
     "socket.io": "^2.2.0"
   }
