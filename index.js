@@ -58,15 +58,14 @@ const SerialPort = require('serialport'); //Recupera o modulo Serial Port
 
 function receiveSend(porta) {
     const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
-    const port = new SerialPort(`COM7`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
+    const port = new SerialPort(`COM6`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
 
     const parser = port.pipe(new Readline({delimiter: '\r\n'})); //Lê a linha apenas se uma nova linhas for inserida
     parser.on('data', (data) => { //Na recepção dos dados = "On data retrieving"
-    console.log(data);//Printa o dado recebido no console
     ut = data.split(',');
     temp = ut[0];
 
-    console.log('Temperatura:',ut[0],'Umidade:',ut[1])
+    console.log('\nTemperatura:',ut[0],'°C','Umidade:',ut[1],'%')
     var datahora = new Date();//Pega a data do sistema 
 
     var data = datahora.getDate()+"/"+(Number(datahora.getMonth())+1)+"/"+datahora.getFullYear(); //Transforma em uma data legível 1/4/2019
@@ -80,7 +79,7 @@ function receiveSend(porta) {
      
         const request = new sql.Request()
         request.stream = true // You can set streaming differently for each request
-        request.query(`INSERT INTO Alerta(Temperatura, Umidade, Sensor_Id) VALUES ('${temp}', '${data[1]}', ${sensor.Id})`) // or request.execute(procedure)
+        request.query(`INSERT INTO Alerta(Temperatura, Umidade, Sensor_Id) VALUES ('${ut[0]}', '${ut[1]}', ${sensor.Id})`) // or request.execute(procedure)
      
         request.on('error', err => {
             console.log(err)
@@ -103,7 +102,7 @@ rl.question('Qual o código do seu sensor?', (answer) => {
     }).then(result => {        
         if (result.rowsAffected > 0) {
             sensor = result.recordset[0];
-            console.log("Achou");
+            console.log("Sensor Encontrado", sensor.Local);
             console.log("\nRecebendo solicitações na porta 4000...");
             receiveSend();
         }else{
