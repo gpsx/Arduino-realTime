@@ -79,7 +79,7 @@ function receiveSend(porta) {
      
         const request = new sql.Request()
         request.stream = true // You can set streaming differently for each request
-        request.query(`INSERT INTO Alerta(Temperatura, Umidade, Sensor_Id) VALUES ('${ut[0]}', '${ut[1]}', ${sensor.Id})`) // or request.execute(procedure)
+        request.query(`INSERT INTO Historico(Temperatura, Umidade, Sensor_Id, DataDMA, Hora) VALUES ('${ut[0]}', '${ut[1]}', ${sensor.Id}, ${data}, ${hora})`) // or request.execute(procedure)
      
         request.on('error', err => {
             console.log(err)
