@@ -79,7 +79,7 @@ function receiveSend(porta) {
      
         const request = new sql.Request()
         request.stream = true // You can set streaming differently for each request
-        request.query(`INSERT INTO Historico(Temperatura, Umidade, Sensor_Id, DataDMA, Hora) VALUES ('${ut[0]}', '${ut[1]}', ${sensor.Id}, ${data}, ${hora})`) // or request.execute(procedure)
+        request.query(`INSERT INTO Historico(Temperatura, Umidade, Sensor_Id, DataDMA, Hora) VALUES ('${ut[0]}', '${ut[1]}', ${sensor.Id}, '${data}', '${hora}')`) // or request.execute(procedure)
      
         request.on('error', err => {
             console.log(err)
@@ -95,30 +95,32 @@ function receiveSend(porta) {
 
 
 
-rl.question('Qual o código do seu sensor?', (answer) => {
-    // TODO: Log the answer in a database
-    sql.connect(config).then(() => {
-        return sql.query`Select * from Sensor where Codigo = ${answer}`
-    }).then(result => {        
-        if (result.rowsAffected > 0) {
-            sensor = result.recordset[0];
-            console.log("Sensor Encontrado", sensor.Local);
-            console.log("\nRecebendo solicitações na porta 4000...");
-            receiveSend();
-        }else{
-            console.log(`Sensor não encontrado` );
-            console.log("\nRecebendo solicitações na porta 4000...");
-        }
-        
-        sql.close()
-    }).catch(err => {
-        console.log(err);
-        sql.close()
-        console.log('Falha ao estabelecer conexão com o banco', err);	
+queryArd = ()=>{
+    rl.question('Qual o código do seu sensor?', (answer) => {
+        // TODO: Log the answer in a database
+        sql.connect(config).then(() => {
+            return sql.query`Select * from Sensor where Codigo = ${answer}`
+        }).then(result => {     
+            sql.close();   
+            if (result.rowsAffected > 0) {
+                sensor = result.recordset[0];
+                console.log("Sensor Encontrado", sensor.Local);
+                console.log("\nRecebendo solicitações na porta 4000...");
+                receiveSend();
+            }else{
+                console.log(`Sensor não encontrado` );
+                console.log("\nRecebendo solicitações na porta 4000...");
+                queryArd();
+            }
+        }).catch(err => {
+            console.log(err);
+            sql.close()
+            console.log('Falha ao estabelecer conexão com o banco', err);	
+        });
+        rl.close();
     });
-    rl.close();
-});
-
+}
+queryArd();
 io.on('connection', (socket) => {//É mostrado quando alguem se conecta
     console.log("Alguem acessou a página do gráfico >-<"); 
 })
