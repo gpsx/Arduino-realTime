@@ -60,7 +60,7 @@ pickPort = ()=>{
 
 function receiveSend(porta) {
     const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
-    const port = new SerialPort(`${porta}`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
+    const port = new SerialPort(`COM6`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
 
     const parser = port.pipe(new Readline({delimiter: '\r\n'})); //Lê a linha apenas se uma nova linhas for inserida
     parser.on('data', (data) => { //Na recepção dos dados = "On data retrieving"
@@ -87,6 +87,7 @@ function receiveSend(porta) {
      
         request.on('error', err => {
             console.log(err)
+            sql.close();
         })
         request.on('done', result => {
             console.log('Dados registrados com sucesso');
@@ -110,7 +111,7 @@ queryArd = ()=>{
                 sensor = result.recordset[0];
                 console.log("Sensor Encontrado", sensor.Local);
                 console.log("\nRecebendo solicitações na porta 4000...");
-                pickPort();
+                receiveSend();
             }else{
                 console.log(`Sensor não encontrado` );
                 console.log("\nRecebendo solicitações na porta 4000...");
