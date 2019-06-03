@@ -35,34 +35,38 @@ const config = {
 
 const SerialPort = require('serialport'); //Recupera o modulo Serial Port
 
-// SerialPort.list().then(entradas_seriais => {
+pickPort = ()=>{
+    SerialPort.list().then(entradas_seriais => {
 
-//     // este bloco trata a verificação de Arduino conectado (inicio)
-
-//     var entradas_seriais_arduino = entradas_seriais.filter(entrada_serial => {
-//         return entrada_serial.vendorId == 2341 && entrada_serial.productId == 43;
-//     });
-
-//     if (entradas_seriais_arduino.length != 1) {
-//         throw new Error("Nenhum Arduino está conectado ou porta USB sem comunicação ou mais de um Arduino conectado");
-//     }
-
-//     return entradas_seriais_arduino[0].comName;
-
-
-//     // este bloco trata a verificação de Arduino conectado (fim)
-
-// }).then(ArduinoCon => {
-//     receiveSend(ArduinoCon);
-// })
+        // este bloco trata a verificação de Arduino conectado (inicio)
+    
+        var entradas_seriais_arduino = entradas_seriais.filter(entrada_serial => {
+            return entrada_serial.vendorId == 2341 && entrada_serial.productId == 43;
+        });
+    
+        if (entradas_seriais_arduino.length != 1) {
+            throw new Error("Nenhum Arduino está conectado ou porta USB sem comunicação ou mais de um Arduino conectado");
+        }
+    
+        return entradas_seriais_arduino[0].comName;
+    
+    
+        // este bloco trata a verificação de Arduino conectado (fim)
+    
+    }).then(ArduinoCon => {
+        receiveSend(ArduinoCon);
+    })
+}
 
 function receiveSend(porta) {
     const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
-    const port = new SerialPort(`COM6`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
+    const port = new SerialPort(`${porta}`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
 
     const parser = port.pipe(new Readline({delimiter: '\r\n'})); //Lê a linha apenas se uma nova linhas for inserida
     parser.on('data', (data) => { //Na recepção dos dados = "On data retrieving"
     ut = data.split(',');
+    ut[0] = parseInt(ut[0]);
+    ut[1] = parseInt(ut[1]);
     temp = ut[0];
 
     console.log('\nTemperatura:',ut[0],'°C','Umidade:',ut[1],'%')
@@ -106,7 +110,7 @@ queryArd = ()=>{
                 sensor = result.recordset[0];
                 console.log("Sensor Encontrado", sensor.Local);
                 console.log("\nRecebendo solicitações na porta 4000...");
-                receiveSend();
+                pickPort();
             }else{
                 console.log(`Sensor não encontrado` );
                 console.log("\nRecebendo solicitações na porta 4000...");
