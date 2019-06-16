@@ -11,20 +11,13 @@ var server = app.listen(4000, () => { //Inicia o servidor na porta 4000
 
 var io = require('socket.io')(server); //Recupera o modulo so socket.io e atrela o socket.io ao nosso servidor express.
 
-var sensor, table;
+let sensor, table, notifications, nLimitation = 5;
 
 let counter = 0;
 
 app.use(express.static('public')); //Send index.html page on GET /
 
 const readline = require('readline');
-
-var notifications = [
-    'A temperatura está em 90% do limite',
-    'A temperatura está em 10% do limite',
-    'A Umidade está em 90% do limite',
-    'A Umidade está em 10% do limite'
-]
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -74,6 +67,13 @@ function receiveSend(porta) {
 
     const parser = port.pipe(new Readline({delimiter: '\r\n'})); //Lê a linha apenas se uma nova linhas for inserida
     parser.on('data', (data) => { //Na recepção dos dados = "On data retrieving"
+        notifications = [
+            'A temperatura está em 90% do limite',
+            'A temperatura está em 10% do limite',
+            'A Umidade está em 90% do limite',
+            'A Umidade está em 10% do limite',
+            `Verifique o sensor com localização ${sensor.Local}`
+        ]
         ut = data.split(',');
         ut[0] = parseInt(ut[0]);
         ut[1] = parseInt(ut[1]);
@@ -82,27 +82,25 @@ function receiveSend(porta) {
         rangeT = sensor.TempMax - sensor.TempMin;
         rangeU = sensor.UmidMax - sensor.UmidMin;
 
-        t90 = sensor.TempMin + (rangeT * .9)
-        t10 = sensor.TempMin + (rangeT * .1)
+        t90 = Number(sensor.TempMin) + (rangeT * .9)
+        t10 = Number(sensor.TempMin) + (rangeT * .1)
 
-        u90 = sensor.UmidMin + (rangeU * .9)
-        u10 = sensor.UmidMin + (rangeU * .1)
+        u90 = Number(sensor.UmidMin) + (rangeU * .9)
+        u10 = Number(sensor.UmidMin) + (rangeU * .1)
+
+        console.log(rangeT, rangeU, t90, t10, u90, u10)
 
         verifyTable();
-
-        if (table != 'Alerta') {
-            verifyNotification();
-        }
 
         console.log('Temperatura:',ut[0],'°C','Umidade:',ut[1],'%\n')
         var datahora = new Date();//Pega a data do sistema 
 
-        var data = datahora.getDate()+"/"+(Number(datahora.getMonth())+1)+"/"+datahora.getFullYear(); //Transforma em uma data legível 1/4/2019
+        data = datahora.getDate()+"/"+(Number(datahora.getMonth())+1)+"/"+datahora.getFullYear(); //Transforma em uma data legível 1/4/2019
 
-        var hora = (datahora.getHours())+":"+(datahora.getMinutes()); //Transforma em uma hora legível 15:00
+        hora = (datahora.getHours())+":"+(datahora.getMinutes()); //Transforma em uma hora legível 15:00
 
         io.sockets.emit('temp', {date: data, time: hora, temp:data}); //Emite o objeto temp, com os atributos date, time e temp
-        sql.close()
+        //sql.close()
         sql.connect(config, err => {
             // ... error checks
         
@@ -117,6 +115,9 @@ function receiveSend(porta) {
             request.on('done', result => {
                 console.log('Dados registrados com sucesso');
                 sql.close();
+                if (table != 'Alerta') {
+                    verifyNotification();
+                }
             })
             
         })
@@ -174,11 +175,11 @@ notification = (Index)=>{
         
     })
 }
-function verifyTable() {
+async function verifyTable() {
     if (ut[0] < sensor.TempMin || ut[0] > sensor.TempMax || ut[1] < sensor.UmidMin || ut[0] > sensor.UmidMax) {
         table = 'Alerta';
         console.log('\nPassou Dos limites');
-        nIndex = 4;
+        await notification(4);
     }
     else {
         table = 'Historico';
@@ -187,30 +188,27 @@ function verifyTable() {
 
 async function verifyNotification() {
     if (ut[0] >= t90) {
-       console.log("A", counter);
-       
-        if(counter == 60){
+       console.log("A", counter);      
+        if(counter == nLimitation){
             await notification(0);
         }
     }
     else if (ut[0] <= t10) {
-        console.log("A", counter);
+        console.log("a", counter);
         
-        if(counter == 60){
+        if(counter == nLimitation){
             await notification(1);
         }
     }
     if (ut[1] >= u90) {
-       console.log("B", counter);
-       
-        if(counter == 60){
+        console.log("B", counter);    
+        if(counter == nLimitation){
             await notification(2);
         }
     }
     else if (ut[1] <= u10) {
-        console.log("B", counter);
-        
-        if(counter == 60){
+        console.log("b", counter);       
+        if(counter == nLimitation){
             await notification(3);
         }
     }
