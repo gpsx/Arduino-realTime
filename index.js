@@ -42,26 +42,28 @@ const config = {
 
 const SerialPort = require('serialport'); //Recupera o modulo Serial Port
 
-// SerialPort.list().then(entradas_seriais => {
+pickPort = ()=>{
+    SerialPort.list().then(entradas_seriais => {
 
-//     // este bloco trata a verificação de Arduino conectado (inicio)
-
-//     var entradas_seriais_arduino = entradas_seriais.filter(entrada_serial => {
-//         return entrada_serial.vendorId == 2341 && entrada_serial.productId == 43;
-//     });
-
-//     if (entradas_seriais_arduino.length != 1) {
-//         throw new Error("Nenhum Arduino está conectado ou porta USB sem comunicação ou mais de um Arduino conectado");
-//     }
-
-//     return entradas_seriais_arduino[0].comName;
-
-
-//     // este bloco trata a verificação de Arduino conectado (fim)
-
-// }).then(ArduinoCon => {
-//     receiveSend(ArduinoCon);
-// })
+        // este bloco trata a verificação de Arduino conectado (inicio)
+    
+        var entradas_seriais_arduino = entradas_seriais.filter(entrada_serial => {
+            return entrada_serial.vendorId == 2341 && entrada_serial.productId == 43;
+        });
+    
+        if (entradas_seriais_arduino.length != 1) {
+            throw new Error("Nenhum Arduino está conectado ou porta USB sem comunicação ou mais de um Arduino conectado");
+        }
+    
+        return entradas_seriais_arduino[0].comName;
+    
+    
+        // este bloco trata a verificação de Arduino conectado (fim)
+    
+    }).then(ArduinoCon => {
+        receiveSend(ArduinoCon);
+    })
+}
 
 function receiveSend(porta) {
     const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
@@ -70,6 +72,8 @@ function receiveSend(porta) {
     const parser = port.pipe(new Readline({delimiter: '\r\n'})); //Lê a linha apenas se uma nova linhas for inserida
     parser.on('data', (data) => { //Na recepção dos dados = "On data retrieving"
     ut = data.split(',');
+    ut[0] = parseInt(ut[0]);
+    ut[1] = parseInt(ut[1]);
     temp = ut[0];
 
     if(ut[0] < sensor.TempMin || ut[0] > sensor.TempMax || ut[1] < sensor.UmidMin || ut[0] > sensor.UmidMax){
@@ -99,6 +103,7 @@ function receiveSend(porta) {
      
         request.on('error', err => {
             console.log(err)
+            sql.close();
         })
         request.on('done', result => {
             console.log('Dados registrados com sucesso');
