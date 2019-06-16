@@ -11,7 +11,10 @@ var server = app.listen(4000, () => { //Inicia o servidor na porta 4000
 
 var io = require('socket.io')(server); //Recupera o modulo so socket.io e atrela o socket.io ao nosso servidor express.
 
-var sensor, table, alert, nIndex;
+var sensor, table;
+
+let counter = 0;
+
 app.use(express.static('public')); //Send index.html page on GET /
 
 const readline = require('readline');
@@ -71,47 +74,53 @@ function receiveSend(porta) {
 
     const parser = port.pipe(new Readline({delimiter: '\r\n'})); //Lê a linha apenas se uma nova linhas for inserida
     parser.on('data', (data) => { //Na recepção dos dados = "On data retrieving"
-    ut = data.split(',');
-    ut[0] = parseInt(ut[0]);
-    ut[1] = parseInt(ut[1]);
-    temp = ut[0];
+        ut = data.split(',');
+        ut[0] = parseInt(ut[0]);
+        ut[1] = parseInt(ut[1]);
+        temp = ut[0];
 
-    if(ut[0] < sensor.TempMin || ut[0] > sensor.TempMax || ut[1] < sensor.UmidMin || ut[0] > sensor.UmidMax){
-        table = 'Alerta'
-        console.log('Passou Dos limites')
-        nIndex = 4
-    }else{
-        table = 'Historico'
-    }
-    console.log('Temperatura:',ut[0],'°C','Umidade:',ut[1],'%\n')
-    var datahora = new Date();//Pega a data do sistema 
+        rangeT = sensor.TempMax - sensor.TempMin;
+        rangeU = sensor.UmidMax - sensor.UmidMin;
 
-    var data = datahora.getDate()+"/"+(Number(datahora.getMonth())+1)+"/"+datahora.getFullYear(); //Transforma em uma data legível 1/4/2019
+        t90 = sensor.TempMin + (rangeT * .9)
+        t10 = sensor.TempMin + (rangeT * .1)
 
-    var hora = (datahora.getHours())+":"+(datahora.getMinutes()); //Transforma em uma hora legível 15:00
+        u90 = sensor.UmidMin + (rangeU * .9)
+        u10 = sensor.UmidMin + (rangeU * .1)
 
-    io.sockets.emit('temp', {date: data, time: hora, temp:data}); //Emite o objeto temp, com os atributos date, time e temp
-    if () {
+        verifyTable();
+
+        if (table != 'Alerta') {
+            verifyNotification();
+        }
+
+        console.log('Temperatura:',ut[0],'°C','Umidade:',ut[1],'%\n')
+        var datahora = new Date();//Pega a data do sistema 
+
+        var data = datahora.getDate()+"/"+(Number(datahora.getMonth())+1)+"/"+datahora.getFullYear(); //Transforma em uma data legível 1/4/2019
+
+        var hora = (datahora.getHours())+":"+(datahora.getMinutes()); //Transforma em uma hora legível 15:00
+
+        io.sockets.emit('temp', {date: data, time: hora, temp:data}); //Emite o objeto temp, com os atributos date, time e temp
+        sql.close()
+        sql.connect(config, err => {
+            // ... error checks
         
-    }
-    sql.connect(config, err => {
-        // ... error checks
-     
-        const request = new sql.Request()
-        request.stream = true // You can set streaming differently for each request
-        request.query(`INSERT INTO ${table}(Temperatura, Umidade, Sensor_Id, DataDMA, Hora) VALUES ('${ut[0]}', '${ut[1]}', ${sensor.Id}, '${data}', '${hora}')`) // or request.execute(procedure)
-     
-        request.on('error', err => {
-            console.log(err)
-            sql.close();
-        })
-        request.on('done', result => {
-            console.log('Dados registrados com sucesso');
-            sql.close();
-        })
+            const request = new sql.Request()
+            request.stream = true // You can set streaming differently for each request
+            request.query(`INSERT INTO ${table}(Temperatura, Umidade, Sensor_Id, DataDMA, Hora) VALUES ('${ut[0]}', '${ut[1]}', ${sensor.Id}, '${data}', '${hora}')`) // or request.execute(procedure)
         
-    })
-});
+            request.on('error', err => {
+                console.log(err)
+                sql.close();
+            })
+            request.on('done', result => {
+                console.log('Dados registrados com sucesso');
+                sql.close();
+            })
+            
+        })
+    });   
 }
 
 
@@ -119,10 +128,11 @@ function receiveSend(porta) {
 queryArd = ()=>{
     rl.question('Qual o código do seu sensor?', (answer) => {
         // TODO: Log the answer in a database
+        sql.close()
         sql.connect(config).then(() => {
             return sql.query`Select * from Sensor where Codigo = ${answer}`
         }).then(result => {     
-            sql.close();   
+            sql.close();           
             if (result.rowsAffected > 0) {
                 sensor = result.recordset[0];
                 console.log("Sensor Encontrado", sensor.Local);
@@ -144,12 +154,15 @@ queryArd = ()=>{
 queryArd();
 
 notification = (Index)=>{
+    console.log(notifications[Index]);
+    Index == 2 || Index == 3 ? counter = 0 : true
+    sql.close()
     sql.connect(config, err => {
         // ... error checks
      
         const request = new sql.Request()
         request.stream = true // You can set streaming differently for each request
-        request.query(`INSERT INTO notificacoes(Mensagem, Estado, Cliente_id) VALUES ('${notifications[Index]}', 'ativo', ${sensor.Client_Id})`) // or request.execute(procedure)
+        request.query(`INSERT INTO notificacoes(Mensagem, Estado, Cliente_id) VALUES ('${notifications[Index]}', 'ativo', ${sensor.Cliente_Id})`) // or request.execute(procedure)
      
         request.on('error', err => {
             console.log(err)
@@ -160,6 +173,48 @@ notification = (Index)=>{
         })
         
     })
+}
+function verifyTable() {
+    if (ut[0] < sensor.TempMin || ut[0] > sensor.TempMax || ut[1] < sensor.UmidMin || ut[0] > sensor.UmidMax) {
+        table = 'Alerta';
+        console.log('\nPassou Dos limites');
+        nIndex = 4;
+    }
+    else {
+        table = 'Historico';
+    }
+}
+
+async function verifyNotification() {
+    if (ut[0] >= t90) {
+       console.log("A", counter);
+       
+        if(counter == 60){
+            await notification(0);
+        }
+    }
+    else if (ut[0] <= t10) {
+        console.log("A", counter);
+        
+        if(counter == 60){
+            await notification(1);
+        }
+    }
+    if (ut[1] >= u90) {
+       console.log("B", counter);
+       
+        if(counter == 60){
+            await notification(2);
+        }
+    }
+    else if (ut[1] <= u10) {
+        console.log("B", counter);
+        
+        if(counter == 60){
+            await notification(3);
+        }
+    }
+    counter++;
 }
 io.on('connection', (socket) => {//É mostrado quando alguem se conecta
     console.log("Alguem acessou a página do gráfico >-<"); 
