@@ -11,7 +11,7 @@ var server = app.listen(4000, () => { //Inicia o servidor na porta 4000
 
 var io = require('socket.io')(server); //Recupera o modulo so socket.io e atrela o socket.io ao nosso servidor express.
 
-let sensor, table, notifications, nLimitation = 5, data , hora;
+let sensor, table, notifications, nLimitation = 5, data , hora, ut;
 
 let counter = 0;
 
@@ -63,7 +63,7 @@ pickPort = ()=>{
 
 function receiveSend(porta) {
     const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
-    const port = new SerialPort(`COM5`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
+    const port = new SerialPort(`COM7`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
 
     const parser = port.pipe(new Readline({delimiter: '\r\n'})); //Lê a linha apenas se uma nova linhas for inserida
     parser.on('data', async (data) => { //Na recepção dos dados = "On data retrieving"
@@ -90,7 +90,7 @@ function receiveSend(porta) {
 
         // console.log(rangeT, rangeU, t90, t10, u90, u10)
 
-        console.log('Temperatura:',ut[0],'°C','Umidade:',ut[1],'%\n')
+        console.log('\nTemperatura:',ut[0],'°C','Umidade:',ut[1],'%')
         var datahora = new Date();//Pega a data do sistema 
 
         data = datahora.getDate()+"/"+(Number(datahora.getMonth())+1)+"/"+datahora.getFullYear(); //Transforma em uma data legível 1/4/2019
@@ -99,15 +99,16 @@ function receiveSend(porta) {
 
         await verifyTable();
 
-        if (table != 'Alerta') {
-            verifyNotification();
-        }
+        // if (table != 'Alerta') {
+        //   
+        // }
 
         io.sockets.emit('temp', {date: data, time: hora, temp:data}); //Emite o objeto temp, com os atributos date, time e temp
         //sql.close()
         sql.connect(config, err => {
             // ... error checks
-        
+            console.log("insert", table);
+            
             const request = new sql.Request()
             request.stream = true // You can set streaming differently for each request
             request.query(`INSERT INTO ${table}(Temperatura, Umidade, Sensor_Id, DataDMA, Hora) VALUES ('${ut[0]}', '${ut[1]}', ${sensor.Id}, '${data}', '${hora}')`) // or request.execute(procedure)
@@ -173,7 +174,7 @@ notification = (Index)=>{
                 reject(err)
             })
             request.on('done', result => {
-                console.log('Dados registrados com sucesso');
+                console.log('notificação registrada com sucesso');
                 resolve('ok')
                 sql.close();
             })
@@ -185,43 +186,44 @@ async function verifyTable() {
     return new Promise(function (resolve, reject) {
         if (ut[0] < sensor.TempMin || ut[0] > sensor.TempMax || ut[1] < sensor.UmidMin || ut[0] > sensor.UmidMax) {
             table = 'Alerta';
-            console.log('\nPassou Dos limites');
+            console.log('Passou Dos limites');
             resolve(notification(4))
         }
         else {
             table = 'Historico';
+            console.log('Tudo ok');
+            resolve(verifyNotification());
         }
     })
 }
 
 async function verifyNotification() {
     return new Promise(function (resolve, reject) {
+        console.log(ut, t90, t10, u90, u10);
+        var a =false;
         if (ut[0] >= t90) {
             console.log("A", counter);      
-             if(counter == nLimitation){
-                notification(0);
-             }
+            resolve(notification(0));
+            a = true
          }
          else if (ut[0] <= t10) {
              console.log("a", counter);
-             
-             if(counter == nLimitation){
-                 notification(1);
-             }
+            resolve(notification(1));
+            a = true
          }
          if (ut[1] >= u90) {
              console.log("B", counter);    
-             if(counter == nLimitation){
-                notification(2);
-             }
+            resolve(notification(2));
+            a = true
          }
-         else if (ut[1] <= u10) {
-             console.log("b", counter);       
-             if(counter == nLimitation){
-                notification(3);
-             }
+         else if (ut[1] <= u10) { 
+             resolve(notification(3));
+             a = true
          }
-         resolve(counter++);
+        if (!a) {
+            console.log("sem notificações");            
+            resolve('ok')
+        }
     })
 }
 io.on('connection', (socket) => {//É mostrado quando alguem se conecta

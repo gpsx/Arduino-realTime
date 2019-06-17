@@ -1,11 +1,11 @@
 void setup() {
-  Serial.begin(9600); //Conectado a porta serial na frequência de 9600bps.
-  delay(1000);
+  // put your setup code here, to run once:
+
 }
 
 void loop() {
-  int value = analogRead(A3); //Recebe o valor da temperatura do sensor
-  int tempC = value*0.48828125; //Converte a temperatura em ºC
-  Serial.println(tempC); //Printa a Temperatura em ºC
-  delay(1000); //Aplica um Delay de 1s
+  Serial.print(random(21,27));
+  Serial.print(',');
+  Serial.println(random(50,80));
+  delay(30000);
 }
