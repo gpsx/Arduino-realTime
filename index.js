@@ -63,15 +63,15 @@ pickPort = ()=>{
 
 function receiveSend(porta) {
     const Readline = SerialPort.parsers.Readline; // Atribui o metodo readline do serial port a variável ReadLine
-    const port = new SerialPort(`COM7`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
+    const port = new SerialPort(`COM5`); //Conecta a porta serial COM5. Veja a sua na IDE do Arduino -> Tools -> Port
 
     const parser = port.pipe(new Readline({delimiter: '\r\n'})); //Lê a linha apenas se uma nova linhas for inserida
     parser.on('data', async (data) => { //Na recepção dos dados = "On data retrieving"
         notifications = [
-            'A temperatura está em 90% do limite',
-            'A temperatura está em 10% do limite',
-            'A Umidade está em 90% do limite',
-            'A Umidade está em 10% do limite',
+            'A temperatura está acima 90% do limite',
+            'A temperatura está abaixo de 10% do limite',
+            'A Umidade está acima 90% do limite',
+            'A Umidade está abaixo de 10% do limite',
             `Verifique o sensor com localização ${sensor.Local}`
         ]
         ut = data.split(',');
@@ -107,7 +107,7 @@ function receiveSend(porta) {
         //sql.close()
         sql.connect(config, err => {
             // ... error checks
-            console.log("insert", table);
+            console.log("Inserindo", table);
             
             const request = new sql.Request()
             request.stream = true // You can set streaming differently for each request
@@ -167,7 +167,7 @@ notification = (Index)=>{
             request.stream = true // You can set streaming differently for each request
             request.query(`INSERT INTO notificacoes(Mensagem, Estado, Cliente_id, key_sensor, data_hora, tipo) 
                             VALUES 
-                                ('${notifications[Index]}', 'ativo', ${sensor.Cliente_Id}, '${sensor.Codigo}','${data,' ',hora}', '${Index == 4 ? 'alerta':'notificação'}') `) // or request.execute(procedure)
+                                ('${notifications[Index]}', 'ativo', ${sensor.Cliente_Id}, '${sensor.Codigo}','${data,' ',hora}', '${Index == 4 ? 'Alerta':'Notificação'}') `) // or request.execute(procedure)
         
             request.on('error', err => {
                 console.log(err)
